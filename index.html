@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+   <link rel="icon" type="png" href="assets/loupe_1313570.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Welcome To My World</title>
+  <style>
+
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+body {
+  margin: 0;
+  background: linear-gradient(to right, #0f0c29, #302b63, #24243e);
+  font-family: 'Share Tech Mono', monospace;
+  color: #00f5ff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  user-select: none;
+}
+
+.terminal {
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  color: #0ff;
+  font-size: 18px;
+  white-space: pre-line;
+  z-index: 4;
+  text-shadow: 0 0 8px #0ff;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+.fingerprint {
+  width: 120px;
+  height: 120px;
+  opacity: 0;
+  animation: pulse 1.5s infinite, glowPulse 3s infinite ease-in-out;
+  z-index: 3;
+  position: relative;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 0 10px #0ff);
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+@keyframes glowPulse {
+  0%, 100% { filter: drop-shadow(0 0 5px #0ff); }
+  50% { filter: drop-shadow(0 0 20px #00ffff); }
+}
+
+#enterBtn {
+  padding: 14px 28px;
+  font-size: 20px;
+  cursor: pointer;
+  background: linear-gradient(to right, #00c9ff, #92fe9d);
+  color: #000;
+  border: none;
+  border-radius: 30px;
+  box-shadow: 0 0 20px #00f5ff;
+  margin-top: 10px;
+  display: none;
+  z-index: 3;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+#enterBtn:hover:not(:disabled) {
+  transform: scale(1.05);
+  background-color: #76f9c2;
+}
+
+#enterBtn:disabled {
+  cursor: not-allowed;
+  background-color: #333;
+  color: #888;
+  box-shadow: none;
+}
+
+.door {
+  position: fixed;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(135deg, #111 30%, #333 70%);
+  box-shadow: inset 0 0 60px #000, 0 0 30px #00ffff99;
+  transition: transform 3s ease-in-out;
+  z-index: 2;
+}
+
+.door::after {
+  content: '';
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 100px;
+  background: linear-gradient(to bottom, #00ffff, #0044ff);
+  border-radius: 8px;
+  box-shadow: 0 0 15px #00ffff, 0 0 40px #0044ff;
+}
+
+.left-door {
+  left: 0;
+  transform: translateX(0%);
+  border-right: 2px solid #0ff9;
+  animation: slightShake 2s infinite ease-in-out;
+}
+
+.right-door {
+  right: 0;
+  transform: translateX(0%);
+  border-left: 2px solid #0ff9;
+  animation: slightShake 2s infinite ease-in-out;
+}
+
+.left-door.open {
+  transform: translateX(-100%);
+  animation: none;
+}
+
+.right-door.open {
+  transform: translateX(100%);
+  animation: none;
+}
+
+@keyframes slightShake {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(1px); }
+}
+
+#quote {
+  position: absolute;
+  bottom: 10%;
+  font-size: 22px;
+  opacity: 0;
+  transition: opacity 1s ease-in;
+  z-index: 3;
+  color: #00ffcc;
+  text-shadow: 0 0 10px #0ff, 0 0 15px #00f;
+}
+
+#quote.show {
+  opacity: 1;
+}
+
+.bg-digital {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, #001122 20%, #000 80%);
+  z-index: 0;
+}
+
+.digital-lines {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(to right, rgba(0,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  z-index: 1;
+}
+
+.center-box {
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+}
+
+  </style>
+</head>
+<body>
+
+  <div class="bg-digital"></div>
+  <div class="digital-lines"></div>
+
+  <div class="terminal" id="terminalText"></div>
+
+  <div class="center-box">
+    <div class="fingerprint" id="fingerprint"></div>
+    <button id="enterBtn" disabled>OPEN VAULT</button>
+  </div>
+
+  <div class="door left-door" id="leftDoor"></div>
+  <div class="door right-door" id="rightDoor"></div>
+
+  <div id="quote">"...core system online."</div>
+
+  <audio id="doorSound" src="https://cdn.pixabay.com/audio/2021/08/04/audio_9ef889e1e8.mp3" preload="auto"></audio>
+
+  <script>
+    const terminal = document.getElementById("terminalText");
+    const fingerprint = document.getElementById("fingerprint");
+    const enterBtn = document.getElementById("enterBtn");
+    const left = document.getElementById("leftDoor");
+    const right = document.getElementById("rightDoor");
+    const quote = document.getElementById("quote");
+    const doorSound = document.getElementById("doorSound");
+
+    const terminalLines = [
+      "Initializing secure access protocol...",
+      "Biometric scanner ready.",
+      "Awaiting voice authentication...",
+      ""
+    ];
+
+    let lineIndex = 0;
+
+    function typeLine() {
+      if (lineIndex < terminalLines.length) {
+        terminal.innerHTML += terminalLines[lineIndex] + "\n";
+        lineIndex++;
+        setTimeout(typeLine, 1500);
+      } else {
+        fingerprint.style.opacity = 1;
+      }
+    }
+
+    // Vault open function (called on button click)
+    function triggerVaultOpen() {
+      fingerprint.style.display = "none";
+      enterBtn.style.display = "none";
+      left.classList.add("open");
+      right.classList.add("open");
+      doorSound.play();
+
+      setTimeout(() => {
+        quote.classList.add("show");
+      }, 1000);
+
+    setTimeout(() => {
+        const overlay = document.createElement("div");
+        overlay.style.position = "fixed";
+        overlay.style.top = 0;
+        overlay.style.left = 0;
+        overlay.style.width = "100%";
+        overlay.style.height = "100%";
+        overlay.style.backgroundColor = "black";
+        overlay.style.opacity = 0;
+        overlay.style.zIndex = 9999;
+        overlay.style.transition = "opacity 2s ease-in-out";
+        document.body.appendChild(overlay);
+        
+        // Start fade-in
+        setTimeout(() => {
+          overlay.style.opacity = 1;
+        }, 100);
+
+        // After fade, redirect to link.html
+        setTimeout(() => {
+          window.location.href = "link.html";
+        }, 2500);
+      }, 2500); // Trigger overlay after 2.5s of door opening
+
+      setTimeout(() => {
+        window.location.href = "link.html";
+      }, 4000);
+    }
+    
+    // Disable the button by default
+    enterBtn.disabled = true;
+
+    // Voice Recognition Setup
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript.trim().toLowerCase();
+        console.log("Heard:", transcript);
+
+        // Check exact phrase "hello pragun" only
+        if (transcript === "hello") {
+          terminal.innerHTML += "\nAccess Granted.\n";
+          recognition.stop();
+          // Show and enable the button for manual vault open
+          enterBtn.style.display = "inline-block";
+          enterBtn.disabled = false;
+          enterBtn.focus();
+        } else {
+          terminal.innerHTML += `\nUnrecognized phrase: "${transcript}". Say exactly "Hello".\n`;
+          recognition.start(); // Restart listening
+        }
+      };
+
+      recognition.onerror = (event) => {
+        terminal.innerHTML += `\nVoice error: ${event.error}. Trying again...\n`;
+        recognition.start();
+      };
+
+      recognition.onend = () => {
+        // Continue listening until button enabled
+        if (enterBtn.disabled) {
+          recognition.start();
+        }
+      };
+
+      // Start listening after intro lines
+      // Remove this auto start block:
+// setTimeout(() => {
+//   terminal.innerHTML += "\n[ Voice system active. Say: 'Hello Pragun' ]\n";
+//   recognition.start();
+// }, 6500); // after intro lines
+
+// Instead, add a manual start button for voice auth
+const startVoiceBtn = document.createElement("button");
+startVoiceBtn.textContent = "Start Voice Authentication";
+startVoiceBtn.style.cssText = `
+  margin-top: 10px; 
+  font-size: 16px; 
+  padding: 10px 20px; 
+  cursor: pointer; 
+  background: #007acc; 
+  color: white; 
+  border: none; 
+  border-radius: 5px;
+  box-shadow: 0 0 10px #00aaff;
+  user-select: none;
+  transition: background-color 0.3s ease;
+`;
+startVoiceBtn.onmouseover = () => startVoiceBtn.style.backgroundColor = "#005f99";
+startVoiceBtn.onmouseout = () => startVoiceBtn.style.backgroundColor = "#007acc";
+
+startVoiceBtn.onclick = () => {
+  terminal.innerHTML += "\n[ Voice system active. Say: 'Hello' ]\n";
+  recognition.start();
+  startVoiceBtn.style.display = "none";
+};
+
+document.querySelector('.center-box').appendChild(startVoiceBtn);
+
+
+    } else {
+      terminal.innerHTML += "\n[ Voice recognition not supported in this browser ]\n";
+      fingerprint.style.opacity = 1;
+    }
+
+    // Button click triggers door open
+    enterBtn.addEventListener("click", () => {
+      if (!enterBtn.disabled) {
+        triggerVaultOpen();
+      }
+    });
+
+    // Start typing intro on page load
+    window.onload = typeLine;
+  </script>
+
+</body>
+</html>
